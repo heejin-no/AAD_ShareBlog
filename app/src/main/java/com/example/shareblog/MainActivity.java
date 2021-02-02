@@ -1,17 +1,17 @@
 package com.example.shareblog;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -52,52 +52,57 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportActionBar().setTitle("Share Blog");
 
-        mainbottomNav = findViewById(R.id.mainBottomNav);
+        if (mAuth.getCurrentUser() != null) {
 
-        // FRAGMENTS
-        homeFragment = new HomeFragment();
-        notificationFragment = new NotificationFragment();
-        accountFragment = new AccountFragment();
+            mainbottomNav = findViewById(R.id.mainBottomNav);
+
+            // FRAGMENTS
+            homeFragment = new HomeFragment();
+            notificationFragment = new NotificationFragment();
+            accountFragment = new AccountFragment();
+
+            replaceFragment(homeFragment);
+
+            mainbottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+                    switch (item.getItemId()) {
+
+                        case R.id.bottom_action_home:
+                            replaceFragment(homeFragment);
+                            return true;
+
+                        case R.id.bottom_action_account:
+                            replaceFragment(accountFragment);
+                            return true;
+
+                        case R.id.bottom_action_notif:
+                            replaceFragment(notificationFragment);
+                            return true;
+
+                        default:
+                            return false;
 
 
-        mainbottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
-                switch (item.getItemId()) {
-
-                    case R.id.bottom_action_home :
-                        replaceFragment(homeFragment);
-                        return true;
-
-                    case R.id.bottom_action_account :
-                        replaceFragment(accountFragment);
-                        return true;
-
-                    case R.id.bottom_action_notif:
-                        replaceFragment(notificationFragment);
-                        return true;
-
-                    default:
-                        return false;
-
+                    }
 
                 }
-
-            }
-        });
+            });
 
 
-        addPostBtn = findViewById(R.id.add_post_btn);
-        addPostBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+            addPostBtn = findViewById(R.id.add_post_btn);
+            addPostBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
 
-                Intent newPostIntent = new Intent(MainActivity.this, NewPostActivity.class);
-                startActivity(newPostIntent);
+                    Intent newPostIntent = new Intent(MainActivity.this, NewPostActivity.class);
+                    startActivity(newPostIntent);
 
-            }
-        });
+                }
+            });
+
+        }
     }
 
     @Override
