@@ -35,6 +35,7 @@ public class HomeFragment extends Fragment {
 
 
     private DocumentSnapshot lastVisible;
+    private Boolean isFirstPageFirstLoad = true;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -84,18 +85,35 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException error) {
 
-                    lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() -1);
+                    if (isFirstPageFirstLoad) {
+
+                        lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+
+                    }
+
                     for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+
                         if (doc.getType() == DocumentChange.Type.ADDED) {
 
-                            BlogPost blogPost = doc.getDocument().toObject(BlogPost.class);
-                            blog_list.add(blogPost);
+                            String blogPostId = doc.getDocument().getId();
+                            BlogPost blogPost = doc.getDocument().toObject(BlogPost.class).withId(blogPostId);
+
+                            if (isFirstPageFirstLoad) {
+
+                                blog_list.add(blogPost);
+
+                            } else {
+
+                                blog_list.add(0, blogPost);
+
+                            }
 
                             blogRecyclerAdapter.notifyDataSetChanged();
 
                         }
-
                     }
+
+                    isFirstPageFirstLoad = false;
 
                 }
             });
@@ -108,25 +126,31 @@ public class HomeFragment extends Fragment {
 
     public void loadMorePost(){
 
-        Query nextQuery = firebaseFirestore.collection("Posts")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .startAfter(lastVisible)
-                .limit(3);
+        if (firebaseAuth.getCurrentUser() != null) {
 
-        nextQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException error) {
+            Query nextQuery = firebaseFirestore.collection("Posts")
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .startAfter(lastVisible)
+                    .limit(3);
 
-                if(!documentSnapshots.isEmpty()) {
+            nextQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException error) {
 
-                    lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
-                    for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
-                        if (doc.getType() == DocumentChange.Type.ADDED) {
+                    if (!documentSnapshots.isEmpty()) {
 
-                            BlogPost blogPost = doc.getDocument().toObject(BlogPost.class);
-                            blog_list.add(blogPost);
+                        lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                        for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
 
-                            blogRecyclerAdapter.notifyDataSetChanged();
+                            if (doc.getType() == DocumentChange.Type.ADDED) {
+
+                                String blogPostId = doc.getDocument().getId();
+                                BlogPost blogPost = doc.getDocument().toObject(BlogPost.class).withId(blogPostId);
+                                blog_list.add(blogPost);
+
+                                blogRecyclerAdapter.notifyDataSetChanged();
+
+                            }
 
                         }
 
@@ -134,9 +158,8 @@ public class HomeFragment extends Fragment {
 
                 }
 
-            }
+            });
 
-        });
-
+        }
     }
 }

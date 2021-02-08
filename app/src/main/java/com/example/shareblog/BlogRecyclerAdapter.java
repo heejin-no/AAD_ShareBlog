@@ -14,10 +14,14 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -28,6 +32,7 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
     public Context context;
 
     private FirebaseFirestore firebaseFirestore;
+    private FirebaseAuth firebaseAuth;
 
     public BlogRecyclerAdapter(List<BlogPost> blog_list){
 
@@ -41,17 +46,22 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.blog_list_item, parent, false);
         context = parent.getContext();
         firebaseFirestore = FirebaseFirestore.getInstance();
+        firebaseAuth = FirebaseAuth.getInstance();
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
 
+        final String blogPostId = blog_list.get(position).BlogPostId;
+        final String currentUserId = firebaseAuth.getCurrentUser().getUid();
+
         String desc_data = blog_list.get(position).getDesc();
         holder.setDescText(desc_data);
 
         String image_url = blog_list.get(position).getImage_url();
-        holder.setBlogImage(image_url);
+        String thumbUri = blog_list.get(position).getImage_thumb();
+        holder.setBlogImage(image_url, thumbUri);
 
         String user_id = blog_list.get(position).getUser_id();
         //User Data will be retrieved here...
@@ -86,6 +96,21 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         String dateString = df.format("dd/MM/yyyy hh:mm:ss", millisecond).toString();
         holder.setTime(dateString);
 
+
+        //Likes Feature
+        holder.blogLikeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Map<String, Object> likesMap = new HashMap<>();
+                likesMap.put("timestamp", FieldValue.serverTimestamp());
+
+                firebaseFirestore.collection("Posts/" + blogPostId + "Likes").document(currentUserId).set(likesMap);
+
+            }
+        });
+
+
     }
 
     @Override
@@ -104,9 +129,14 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         private TextView blogUserName;
         private CircleImageView blogUserImage;
 
+        private ImageView blogLikeBtn;
+        private TextView blogLikeCount;
+
         public ViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
+
+            blogLikeBtn = mView.findViewById(R.id.blog_like_btn);
         }
 
         public void setDescText(String descText){
@@ -115,12 +145,16 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
             descView.setText(descText);
         }
 
-        public void setBlogImage(String downloadUri){
+        public void setBlogImage(String downloadUri, String thumbUri){
 
             blogImageView = mView.findViewById(R.id.blog_image);
+
             RequestOptions requestOptions = new RequestOptions();
             requestOptions.placeholder(R.drawable.image_placeholder);
-            Glide.with(context).applyDefaultRequestOptions(requestOptions).load(downloadUri).into(blogImageView);
+
+            Glide.with(context).applyDefaultRequestOptions(requestOptions).load(downloadUri).thumbnail(
+                    Glide.with(context).load(thumbUri)
+            ).into(blogImageView);
 
         }
 
