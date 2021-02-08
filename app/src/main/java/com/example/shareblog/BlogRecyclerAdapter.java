@@ -16,8 +16,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +55,8 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+
+        holder.setIsRecyclable(false);
 
         final String blogPostId = blog_list.get(position).BlogPostId;
         final String currentUserId = firebaseAuth.getCurrentUser().getUid();
@@ -97,16 +102,70 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         holder.setTime(dateString);
 
 
+        //Get Likes Count
+        firebaseFirestore.collection("Posts/" + blogPostId + "Likes").addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException error) {
+
+                if(!documentSnapshots.isEmpty()){
+
+                    int count = documentSnapshots.size();
+
+                    holder.updateLikesCount(count);
+
+                } else {
+
+                    holder.updateLikesCount(0);
+
+                }
+
+            }
+        });
+
+
+
+        //Get Likes
+        firebaseFirestore.collection("Posts/" + blogPostId + "Likes").document(currentUserId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException error) {
+
+                if (documentSnapshot.exists()){
+
+                    holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_like_accent));
+
+                } else {
+
+                    holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_like_gray));
+
+                }
+
+            }
+        });
+
+
         //Likes Feature
         holder.blogLikeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                Map<String, Object> likesMap = new HashMap<>();
-                likesMap.put("timestamp", FieldValue.serverTimestamp());
+                firebaseFirestore.collection("Posts/" + blogPostId + "Likes").document(currentUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
 
-                firebaseFirestore.collection("Posts/" + blogPostId + "Likes").document(currentUserId).set(likesMap);
+                        if (!task.getResult().exists()){
 
+                            Map<String, Object> likesMap = new HashMap<>();
+                            likesMap.put("timestamp", FieldValue.serverTimestamp());
+
+                            firebaseFirestore.collection("Posts/" + blogPostId + "Likes").document(currentUserId).set(likesMap);
+
+                        } else {
+
+                            firebaseFirestore.collection("Posts/" + blogPostId + "Likes").document(currentUserId).delete();
+
+                        }
+                    }
+                });
             }
         });
 
@@ -176,6 +235,13 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
             placeholderOption.placeholder(R.drawable.profile_placeholder);
 
             Glide.with(context).applyDefaultRequestOptions(placeholderOption).load(image).into(blogUserImage);
+
+        }
+
+        public void updateLikesCount(int count){
+
+            blogLikeCount = mView.findViewById(R.id.blog_like_count);
+            blogLikeCount.setText(count + " Likes");
 
         }
 
