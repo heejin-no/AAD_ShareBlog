@@ -1,11 +1,13 @@
 package com.example.shareblog;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -90,16 +92,22 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
             }
         });
 
-        long millisecond = blog_list.get(position).getTimestamp().getTime();
+        try {
+
+
+            long millisecond = blog_list.get(position).getTimestamp().getTime();
 
 //        String dateString = DateFormat.format("MM/dd/yyyy", new Date(millisecond)).toString();
 
 //        String dateString = new DateFormat("MM/dd/yyyy").format(new Date(millisecond));
 //        String dateString = new DateFormat(millisecond).format("MM/dd/yyyy");
 
-        android.text.format.DateFormat df = new android.text.format.DateFormat();
-        String dateString = df.format("dd/MM/yyyy hh:mm:ss", millisecond).toString();
-        holder.setTime(dateString);
+            android.text.format.DateFormat df = new android.text.format.DateFormat();
+            String dateString = df.format("dd/MM/yyyy hh:mm:ss", millisecond).toString();
+            holder.setTime(dateString);
+        } catch (Exception e){
+            Toast.makeText(context, "Exception : " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
 
 
         //Get Likes Count
@@ -169,6 +177,18 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
             }
         });
 
+        holder.blogCommentBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent commentIntent = new Intent(context, CommentsActivity.class);
+                commentIntent.putExtra("blog_post_id", blogPostId);
+                context.startActivities(commentIntent);
+            }
+        });
+
+
+
 
     }
 
@@ -191,11 +211,14 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         private ImageView blogLikeBtn;
         private TextView blogLikeCount;
 
+        private ImageView blogCommentBtn;
+
         public ViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
 
             blogLikeBtn = mView.findViewById(R.id.blog_like_btn);
+            blogCommentBtn = mView.findViewById(R.id.blog_comment_icon);
         }
 
         public void setDescText(String descText){
