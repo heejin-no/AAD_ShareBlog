@@ -93,8 +93,6 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         });
 
         try {
-
-
             long millisecond = blog_list.get(position).getTimestamp().getTime();
 
 //        String dateString = DateFormat.format("MM/dd/yyyy", new Date(millisecond)).toString();
@@ -129,7 +127,6 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
 
             }
         });
-
 
 
         //Get Likes
@@ -193,9 +190,7 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
     }
 
     @Override
-    public int getItemCount() {
-        return blog_list.size();
-    }
+    public int getItemCount() { return blog_list.size(); }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -212,6 +207,7 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         private TextView blogLikeCount;
 
         private ImageView blogCommentBtn;
+        
 
         public ViewHolder(View itemView) {
             super(itemView);

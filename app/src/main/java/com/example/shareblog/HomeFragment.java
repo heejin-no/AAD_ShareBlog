@@ -85,36 +85,40 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException error) {
 
-                    if (isFirstPageFirstLoad) {
+                    if (!documentSnapshots.isEmpty()) {
 
-                        lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                        if (isFirstPageFirstLoad) {
 
-                    }
-
-                    for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
-
-                        if (doc.getType() == DocumentChange.Type.ADDED) {
-
-                            String blogPostId = doc.getDocument().getId();
-                            BlogPost blogPost = doc.getDocument().toObject(BlogPost.class).withId(blogPostId);
-
-                            if (isFirstPageFirstLoad) {
-
-                                blog_list.add(blogPost);
-
-                            } else {
-
-                                blog_list.add(0, blogPost);
-
-                            }
-
-                            blogRecyclerAdapter.notifyDataSetChanged();
+                            lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                            blog_list.clear();
 
                         }
+
+                        for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+
+                            if (doc.getType() == DocumentChange.Type.ADDED) {
+
+                                String blogPostId = doc.getDocument().getId();
+                                BlogPost blogPost = doc.getDocument().toObject(BlogPost.class).withId(blogPostId);
+
+                                if (isFirstPageFirstLoad) {
+
+                                    blog_list.add(blogPost);
+
+                                } else {
+
+                                    blog_list.add(0, blogPost);
+
+                                }
+
+                                blogRecyclerAdapter.notifyDataSetChanged();
+
+                            }
+                        }
+
+                        isFirstPageFirstLoad = false;
+
                     }
-
-                    isFirstPageFirstLoad = false;
-
                 }
             });
 

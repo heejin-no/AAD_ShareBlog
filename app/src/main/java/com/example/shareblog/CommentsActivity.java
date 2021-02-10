@@ -9,15 +9,23 @@ import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CommentsActivity extends AppCompatActivity {
@@ -26,6 +34,10 @@ public class CommentsActivity extends AppCompatActivity {
 
     private EditText comment_field;
     private ImageView comment_post_btn;
+
+    private RecyclerView comment_list;
+    private CommentsRecyclerAdapter commentsRecyclerAdapter;
+    private List<Comments> commentsList;
 
     private FirebaseFirestore firebaseFirestore;
     private FirebaseAuth firebaseAuth;
@@ -50,6 +62,39 @@ public class CommentsActivity extends AppCompatActivity {
 
         comment_field = findViewById(R.id.comment_field);
         comment_post_btn = findViewById(R.id.comment_post_btn);
+        comment_list = findViewById(R.id.comment_list);
+
+
+        //RecyclerView Firebase List
+        commentsList = new ArrayList<>();
+        commentsRecyclerAdapter = new CommentsRecyclerAdapter(commentsList);
+        comment_list.setHasFixedSize(true);
+        comment_list.setLayoutManager(new LinearLayoutManager(this));
+        comment_list.setAdapter(commentsRecyclerAdapter);
+
+
+        firebaseFirestore.collection("Posts/" + blog_post_id + "/Comments").addSnapshotListener(CommentsActivity.this, new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException error) {
+
+                if (!documentSnapshots.isEmpty()) {
+
+                    for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+
+                        if (doc.getType() == DocumentChange.Type.ADDED) {
+
+                            String commentId = doc.getDocument().getId();
+                            Comments comments = doc.getDocument().toObject(Comments.class);
+                            commentsList.add(comments);
+                            commentsRecyclerAdapter.notifyDataSetChanged();
+
+                        }
+                    }
+
+                }
+
+            }
+        });
 
         comment_post_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,4 +131,8 @@ public class CommentsActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void setSupportActionBar(Toolbar commentToolbar) {
+    }
+
 }
