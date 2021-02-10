@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -34,14 +36,16 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapter.ViewHolder> {
 
     public List<BlogPost> blog_list;
+    public List<User> user_list;
     public Context context;
 
     private FirebaseFirestore firebaseFirestore;
     private FirebaseAuth firebaseAuth;
 
-    public BlogRecyclerAdapter(List<BlogPost> blog_list){
+    public BlogRecyclerAdapter(List<BlogPost> blog_list, List<User> user_list){
 
         this.blog_list = blog_list;
+        this.user_list = user_list;
 
     }
 
@@ -56,7 +60,7 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
 
         holder.setIsRecyclable(false);
 
@@ -70,41 +74,34 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         String thumbUri = blog_list.get(position).getImage_thumb();
         holder.setBlogImage(image_url, thumbUri);
 
-        String user_id = blog_list.get(position).getUser_id();
-        //User Data will be retrieved here...
-        firebaseFirestore.collection("Users").document(user_id).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+        String blog_user_id = blog_list.get(position).getUser_id();
 
-                if(task.isSuccessful()) {
+        if (blog_user_id.equals(currentUserId)){
 
-                    String userName = task.getResult().getString("name");
-                    String userImage = task.getResult().getString("image");
+            holder.blogDeleteBtn.setEnabled(true);
+            holder.blogDeleteBtn.setVisibility(View.VISIBLE);
 
-                    holder.setUserData(userName, userImage);
+        }
 
-                } else {
+        String userName = user_list.get(position).getName();
+        String userImage = user_list.get(position).getImage();
 
-                    //Firebase Exception
+        holder.setUserData(userName, userImage);
 
-                }
 
-            }
-        });
 
-        try {
-            long millisecond = blog_list.get(position).getTimestamp().getTime();
-
-//        String dateString = DateFormat.format("MM/dd/yyyy", new Date(millisecond)).toString();
-
+        //        String dateString = DateFormat.format("MM/dd/yyyy", new Date(millisecond)).toString();
 //        String dateString = new DateFormat("MM/dd/yyyy").format(new Date(millisecond));
 //        String dateString = new DateFormat(millisecond).format("MM/dd/yyyy");
-
+        try {
+            long millisecond = blog_list.get(position).getTimestamp().getTime();
             android.text.format.DateFormat df = new android.text.format.DateFormat();
             String dateString = df.format("dd/MM/yyyy hh:mm:ss", millisecond).toString();
             holder.setTime(dateString);
         } catch (Exception e){
+
             Toast.makeText(context, "Exception : " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
         }
 
 
@@ -184,6 +181,23 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
             }
         });
 
+        holder.blogDeleteBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                firebaseFirestore.collection("Posts").document(blogPostId).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+
+                        blog_list.remove(position);
+                        user_list.remove(position);
+
+                    }
+                });
+
+            }
+        });
+
 
 
 
@@ -207,7 +221,8 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
         private TextView blogLikeCount;
 
         private ImageView blogCommentBtn;
-        
+        private Button blogDeleteBtn;
+
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -215,6 +230,7 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
 
             blogLikeBtn = mView.findViewById(R.id.blog_like_btn);
             blogCommentBtn = mView.findViewById(R.id.blog_comment_icon);
+            blogDeleteBtn = mView.findViewById(R.id.blog_delete_btn);
         }
 
         public void setDescText(String descText){
