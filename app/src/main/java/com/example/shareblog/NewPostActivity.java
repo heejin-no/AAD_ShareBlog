@@ -16,7 +16,6 @@ import android.widget.Toolbar;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -106,32 +105,42 @@ public class NewPostActivity extends AppCompatActivity {
 
                     final String randomName = UUID.randomUUID().toString();
 
-                    final StorageReference filePath = storageReference.child("post_images").child(randomName + ".jpg");
-                    Task<Uri> urlTask = filePath.putFile(postImageUri).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                    // PHOTO UPLOAD
+                    File newImageFile = new File(postImageUri.getPath());
+                    try {
+
+                        compressedImageFile = new Compressor(NewPostActivity.this)
+                                .setMaxHeight(720)
+                                .setMaxWidth(720)
+                                .setQuality(50)
+                                .compressToBitmap(newImageFile);
+
+                    } catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    compressedImageFile.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] imageData = baos.toByteArray();
+
+                    //Photo Upload
+                    UploadTask filePath = storageReference.child("post_images").child(randomName + ".jpg").putBytes(imageData);
+                    filePath.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                         @Override
-                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                            if (!task.isSuccessful()) {
-                                throw task.getException();
-                            }
+                        public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
 
-                            // Continue with the task to get the download URL
-                            return filePath.getDownloadUrl();
-                        }
-                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                        @Override
-                        public void onComplete(@NonNull final Task<Uri> task) {
+                            final String downloadUri = task.getResult().getUploadSessionUri().toString();
 
-                            final String downloadUri = task.getResult().toString();
-
-                            if (task.isSuccessful()) {
+                            if(task.isSuccessful()) {
 
                                 File newThumbFile = new File(postImageUri.getPath());
                                 try {
+
                                     compressedImageFile = new Compressor(NewPostActivity.this)
-                                            .setMaxHeight(100)
-                                            .setMaxWidth(100)
-                                            .setQuality(1)
+                                            .setMaxHeight(720)
+                                            .setMaxWidth(720)
+                                            .setQuality(50)
                                             .compressToBitmap(newThumbFile);
+
                                 } catch (IOException e){
                                     e.printStackTrace();
                                 }
@@ -146,10 +155,6 @@ public class NewPostActivity extends AppCompatActivity {
                                     @Override
                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-//                                        Task<Uri> urlTask = task.getResult().getStorage().getDownloadUrl();
-//                                        while (!urlTask.isSuccessful());
-//                                        final  String downloadthumbUri  =urlTask.getResult().toString();
-
                                         String downloadthumbUri = taskSnapshot.getUploadSessionUri().toString();
 
                                         Map<String, Object> postMap = new HashMap<>();
@@ -163,9 +168,11 @@ public class NewPostActivity extends AppCompatActivity {
                                             @Override
                                             public void onComplete(@NonNull Task<DocumentReference> task) {
                                                 if (task.isSuccessful()) {
+
                                                     Toast.makeText(NewPostActivity.this, "Post was Added", Toast.LENGTH_LONG).show();
                                                     Intent mainIntent = new Intent(NewPostActivity.this, MainActivity.class);
                                                     startActivity(mainIntent);
+                                                    finish();
 
                                                 } else {
                                                     String tempMessage = task.getException().getMessage();
@@ -186,68 +193,21 @@ public class NewPostActivity extends AppCompatActivity {
                                     }
                                 });
 
-//                                compressedImageFile = new Compressor(NewPostActivity.this).compressToBitmap(newImageFile);
-//                                compressedImageFile = Compressor.compress(context, newImageFile)
-
 
 
                             } else {
                                 // Handle failures
                                 newPostProgress.setVisibility(View.INVISIBLE);
-                                String tempMessage = task.getException().getMessage();
-                                Toast.makeText(NewPostActivity.this, "Error: " + tempMessage, Toast.LENGTH_LONG).show();
+//                                String tempMessage = task.getException().getMessage();
+//                                Toast.makeText(NewPostActivity.this, "Error: " + tempMessage, Toast.LENGTH_LONG).show();
                             }
-                        }
+
+                         }
                     });
 
-//                    String randomName = FieldValue.serverTimestamp().toString();
-//
-//                    final StorageReference filePath = storageReference.child("post_images").child(randomName + ".jpg");
-//                    filePath.putFile(postImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-//
-//                            if(task.isSuccessful()) {
-//
-//                                String downloadUri = task.getResult().getDownloadUri().toString();
-//
-//                                Map<String, Object> postMap = new HashMap<>();
-//                                postMap.put("image_url", downloadUri);
-//                                postMap.put("desc", desc);
-//                                postMap.put("user_id", current_user_id);
-//                                postMap.put("timestamp", FieldValue.serverTimestamp());
-//
-//                                firebaseFirestore.collection("Posts").add(postMap).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
-//                                    @Override
-//                                    public void onComplete(@NonNull Task<DocumentReference> task) {
-//
-//                                        if (task.isSuccessful()) {
-//
-//                                            Toast.makeText(NewPostActivity.this, "Post was Added", Toast.LENGTH_LONG).show();
-//                                            Intent mainIntent = new Intent(NewPostActivity.this, MainActivity.class);
-//                                            startActivity(mainIntent);
-//                                            finish();
-//
-//                                        } else{
-//
-//                                            String tempMessage = task.getException().getMessage();
-//                                            Toast.makeText(NewPostActivity.this, "Error: " + tempMessage, Toast.LENGTH_LONG).show();
-//
-//                                        }
-//
-//                                        newPostProgress.setVisibility(View.INVISIBLE);
-//
-//                                    }
-//                                });
-//
-//                            } else {
-//
-//                                newPostProgress.setVisibility(View.INVISIBLE);
-//
-//                            }
-//
-//                        }
-//                    });
+
+
+
 
                 }
 
