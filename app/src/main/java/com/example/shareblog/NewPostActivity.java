@@ -1,8 +1,5 @@
 package com.example.shareblog;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -15,6 +12,9 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.widget.Toolbar;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -36,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 import id.zelory.compressor.Compressor;
@@ -126,13 +125,13 @@ public class NewPostActivity extends AppCompatActivity {
 
                             if (task.isSuccessful()) {
 
-                                File newImageFile = new File(postImageUri.getPath());
+                                File newThumbFile = new File(postImageUri.getPath());
                                 try {
                                     compressedImageFile = new Compressor(NewPostActivity.this)
                                             .setMaxHeight(100)
                                             .setMaxWidth(100)
-                                            .setQuality(2)
-                                            .compressToBitmap(newImageFile);
+                                            .setQuality(1)
+                                            .compressToBitmap(newThumbFile);
                                 } catch (IOException e){
                                     e.printStackTrace();
                                 }

@@ -177,7 +177,7 @@ public class BlogRecyclerAdapter extends RecyclerView.Adapter<BlogRecyclerAdapte
 
                 Intent commentIntent = new Intent(context, CommentsActivity.class);
                 commentIntent.putExtra("blog_post_id", blogPostId);
-                context.startActivities(commentIntent);
+                context.startActivity(commentIntent);
             }
         });
 

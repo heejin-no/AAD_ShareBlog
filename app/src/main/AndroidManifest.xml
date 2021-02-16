@@ -14,7 +14,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".CommentsActivity"></activity>
+        <activity android:name=".CommentsActivity"
+            android:parentActivityName=".MainActivity"></activity>
         <activity
             android:name=".NewPostActivity"
             android:parentActivityName=".MainActivity" />

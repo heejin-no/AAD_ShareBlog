@@ -135,4 +135,5 @@ public class CommentsActivity extends AppCompatActivity {
     private void setSupportActionBar(Toolbar commentToolbar) {
     }
 
+
 }
