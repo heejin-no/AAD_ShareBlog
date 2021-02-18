@@ -27,7 +27,7 @@
         android:focusable="true"
         android:padding="20dp"
         app:backgroundTint="@color/colorPrimary"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/mainBottomNav"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@mipmap/action_add" />
 
