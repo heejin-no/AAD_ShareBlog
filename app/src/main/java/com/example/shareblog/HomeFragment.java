@@ -200,4 +200,17 @@ public class HomeFragment extends Fragment {
 
         }
     }
+//    @Override
+//    public void onDetach() {
+//        // this will make you scroll all the way down
+//        isFirstPageFirstLoad = true;
+//        super.onDetach();
+//    }
+//
+//    @Override
+//    public void onAttach(Context context) {
+//        // this will rearrange them in desending order
+//        isFirstPageFirstLoad = true;
+//        super.onAttach(context);
+//    }
 }

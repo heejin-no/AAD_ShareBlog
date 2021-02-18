@@ -47,7 +47,8 @@ public class SetupActivity extends AppCompatActivity {
     private CircleImageView setupImage;
     private Uri mainImageURI = null;
 
-    private String user_id = "";
+//    private String user_id = "";
+    private String user_id;
 
     private boolean isChanged = false;
 
@@ -138,11 +139,13 @@ public class SetupActivity extends AppCompatActivity {
 
                         File newImageFile = new File(mainImageURI.getPath());
                         try {
+
                             compressedImageFile = new Compressor(SetupActivity.this)
                                     .setMaxHeight(125)
                                     .setMaxWidth(125)
                                     .setQuality(50)
                                     .compressToBitmap(newImageFile);
+
                         } catch (IOException e){
                             e.printStackTrace();
                         }
@@ -151,20 +154,22 @@ public class SetupActivity extends AppCompatActivity {
                         compressedImageFile.compress(Bitmap.CompressFormat.JPEG, 100, baos);
                         byte[] thumbData = baos.toByteArray();
 
-                        UploadTask image_path = storageReference.child("post_images").child(user_id + ".jpg").putBytes(thumbData);
-                        image_path.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                        UploadTask image_path = storageReference.child("profile_images").child(user_id + ".jpg").putBytes(thumbData);
+
+                        image_path.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>()  {
                             @Override
                             public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+
                                 if (task.isSuccessful()){
 
-                                    storeFirestore(task, user_name);
+                                    storeFirestore(task.toString(), user_name);
 
                                 } else {
 
                                     String error = task.getException().getMessage();
                                     Toast.makeText(SetupActivity.this, "(Image Error) : " + error, Toast.LENGTH_LONG).show();
 
-                                    setupProgress.setVisibility(View.VISIBLE);
+                                    setupProgress.setVisibility(View.INVISIBLE);
 
 
                                 }

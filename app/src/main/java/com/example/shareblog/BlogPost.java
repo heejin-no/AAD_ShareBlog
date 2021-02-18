@@ -17,6 +17,8 @@ public class BlogPost extends BlogPostId{
         this.timestamp = timestamp;
     }
 
+
+
     public String getUser_id() {
         return user_id;
     }
